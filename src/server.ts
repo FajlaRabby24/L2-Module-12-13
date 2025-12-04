@@ -45,6 +45,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World! Next");
 });
 
+// create user
 app.post("/users", async (req: Request, res: Response) => {
   try {
     const { name, email } = req.body;
@@ -67,6 +68,7 @@ app.post("/users", async (req: Request, res: Response) => {
   }
 });
 
+// get all user
 app.get("/users", async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users`);
@@ -84,6 +86,7 @@ app.get("/users", async (req: Request, res: Response) => {
   }
 });
 
+// get single user
 app.get("/users/:id", async (req: Request, res: Response) => {
   // console.log(req.params);
   // res.send({ message: "api is cool..." });
@@ -113,6 +116,7 @@ app.get("/users/:id", async (req: Request, res: Response) => {
   }
 });
 
+// update
 app.put("/users/:id", async (req: Request, res: Response) => {
   try {
     const { name, email } = req.body;
@@ -141,13 +145,14 @@ app.put("/users/:id", async (req: Request, res: Response) => {
   }
 });
 
+// delete
 app.delete("/users/:id", async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`DELETE FROM users WHERE id = $1`, [
       req.params.id,
     ]);
 
-    if (result.rows.length === 0) {
+    if (result.rowCount === 0) {
       res.status(404).json({
         success: false,
         message: "user not found",
@@ -159,6 +164,48 @@ app.delete("/users/:id", async (req: Request, res: Response) => {
         data: null,
       });
     }
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// TODO - todos crud
+
+// create todo
+app.post("/todos", async (req: Request, res: Response) => {
+  try {
+    const { user_id, title } = req.body;
+    const result = await pool.query(
+      `INSERT INTO todos(user_id, title) VALUES($1, $2) RETURNING *`,
+      [user_id, title]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Todo created",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// get all todos
+app.get("/todos", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`SELECT * FROM todos`);
+
+    res.status(200).json({
+      success: true,
+      message: "todos retrived successfully!",
+      data: result.rows,
+    });
   } catch (error: any) {
     res.status(500).json({
       success: false,
