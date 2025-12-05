@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 
 // higher order function return korbe function
-const auth = () => {
+const auth = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization;
@@ -15,9 +15,16 @@ const auth = () => {
         });
       }
 
-      const decoded = jwt.verify(token, config.jwt_secret!);
+      const decoded = jwt.verify(token, config.jwt_secret!) as JwtPayload;
       console.log({ decoded });
-      req.user = decoded as JwtPayload;
+      req.user = decoded;
+
+      if (roles.length && !roles.includes(decoded.role)) {
+        return res.status(500).json({
+          success: false,
+          message: "Unauthorized!",
+        });
+      }
       next();
     } catch (error: any) {
       res.status(500).json({

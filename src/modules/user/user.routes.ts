@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post("/", userControllers.createUser);
 
-router.get("/", auth(), userControllers.getUser);
+router.get("/", auth("admin"), userControllers.getUser);
 
 router.get("/:id", userControllers.getSingleUser);
 
