@@ -1,22 +1,30 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 
 // higher order function return korbe function
 const auth = () => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization;
+    try {
+      const token = req.headers.authorization;
 
-    if (!token) {
-      return res.status(500).json({
+      if (!token) {
+        return res.status(500).json({
+          success: false,
+          message: "You are not allowed!",
+        });
+      }
+
+      const decoded = jwt.verify(token, config.jwt_secret!);
+      console.log({ decoded });
+      req.user = decoded as JwtPayload;
+      next();
+    } catch (error: any) {
+      res.status(500).json({
         success: false,
-        message: "You are not allowed!",
+        message: error.message,
       });
     }
-
-    const decoded = jwt.verify(token, config.jwt_secret!);
-    console.log({ decoded });
-    next();
   };
 };
 
